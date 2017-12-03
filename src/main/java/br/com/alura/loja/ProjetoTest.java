@@ -2,29 +2,31 @@ package br.com.alura.loja;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.thoughtworks.xstream.XStream;
-
-import br.com.alura.loja.modelo.Carrinho;
-import br.com.alura.loja.modelo.Produto;
 import br.com.alura.loja.modelo.Projeto;
 import junit.framework.Assert;
 
 public class ProjetoTest {
 	private HttpServer server;
+	private Client client;
+	private WebTarget target;
 	
 	@Before
 	public void inicializaTeste() {
-		server = Servidor.startaServidor();
+		this.server = Servidor.startaServidor();
+		ClientConfig config = new ClientConfig();
+		config.register(new LoggingFilter());
+		
+		this.client = ClientBuilder.newClient(config);
+		this.target = client.target("http://localhost:8080");
 	}
 	
 	@After
@@ -34,10 +36,7 @@ public class ProjetoTest {
 	
 	@Test
 	public void testaProjetoResource() {
-		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target("http://localhost:8080");
-		String conteudo = target.path("/projetos/1").request().get(String.class);
-		Projeto projeto = (Projeto) new XStream().fromXML(conteudo);
+		Projeto projeto = this.target.path("/projetos/1").request().get(Projeto.class);
 		
 		Assert.assertEquals("Minha loja", projeto.getNome());
 	}
